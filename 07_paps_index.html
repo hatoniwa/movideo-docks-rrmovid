@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hyakutoka Stories – Stage Menu</title>
+<meta name="theme-color" content="#000000" />
+<style>
+  body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: system-ui, "Noto Sans JP", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 20px 0;
+  }
+
+  h1 {
+    color: #ffd54a;
+    text-shadow: 0 0 12px rgba(255,213,74,0.8);
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+  p.subtitle {
+    color: #ccc;
+    font-size: 15px;
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+
+  .app {
+    width: 640px;
+    max-width: 95vw;
+    text-align: center;
+    position: relative;
+  }
+
+  /* 🎵 BGM ボタン */
+  #bgmToggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background 0.2s;
+  }
+  #bgmToggle:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  select, button {
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin: 4px;
+  }
+
+  button.primary {
+    background: linear-gradient(90deg, #ffd54a, #ffb300);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(255,213,74,0.7);
+    transition: transform .15s, box-shadow .2s;
+  }
+  button.primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 18px rgba(255,213,74,1);
+  }
+
+  .stage {
+    width: 640px;
+    max-width: 95vw;
+    height: 360px;
+    background: #000;
+    border: 2px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(255,213,74,0.3);
+    margin: 12px auto;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  .hint {
+    font-size: 13px;
+    color: #ccc;
+    margin-top: 10px;
+  }
+
+  .nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 18px;
+  }
+</style>
+</head>
+<body>
+  <h1>百灯火物語 – Hyakutoka Stories</h1>
+  <p class="subtitle">Seven Lights of Fate</p>
+
+  <div class="app">
+    <!-- 🎵 BGM -->
+    <button id="bgmToggle">🎵 BGM ON</button>
+    <audio id="bgm" src="bgm.mp3" loop></audio>
+
+    <!-- 🎮 Picker -->
+    <div class="bar">
+      <label>Pick
+        <select id="pick"></select>
+      </label>
+      <button id="play" class="primary">▶ Play</button>
+      <button id="open">↗ Open in new tab</button>
+      <button id="stop">⏹ Stop</button>
+    </div>
+
+    <div class="stage">
+      <iframe id="player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <div class="hint" id="hint">
+      Choose one of the seven stories.  
+      If the page cannot be embedded, use “Open in new tab”.
+    </div>
+
+    <!-- 🕊 終了・導線ボタン -->
+    <div class="nav-buttons">
+      <button onclick="location.href='https://hatoniwa.github.io/movideo/games/gameA.html'">
+        🔮 Back to Intercultural Game
+      </button>
+      <button onclick="location.href='end_card.html'" class="primary">
+        🌕 To the Next Stage
+      </button>
+    </div>
+  </div>
+
+<script>
+const items = [
+  { label: 'The First Light – Awakening', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/01_paps__index.html' },
+  { label: 'The Second Light – Promise', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/02_paps_index.html' },
+  { label: 'The Third Light – Mirage', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/03_paps_index.html' },
+  { label: 'The Fourth Light – Desert Memory', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/04_paps_index.html' },
+  { label: 'The Fifth Light – Whisper of Stars', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/05_paps_index.html' },
+  { label: 'The Sixth Light – Lost Name', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/06_paps_index.html' },
+  { label: 'The Seventh Light – Reunion', url: 'https://hatoniwa.github.io/movideo-docks-rrmovid/07_paps_index.html' }
+];
+
+// 🎥 埋め込みURL変換
+function toEmbedURL(url){
+  try{
+    const u = new URL(url.trim());
+    const host = u.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be'){
+      const id = u.pathname.split('/')[1];
+      return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+    }
+    if (host.endsWith('youtube.com')){
+      if (u.pathname.startsWith('/watch')) {
+        const id = u.searchParams.get('v');
+        return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+      }
+    }
+  }catch(e){}
+  return url;
+}
+
+const pick=document.getElementById('pick');
+const player=document.getElementById('player');
+const hint=document.getElementById('hint');
+
+items.forEach((it,i)=>{
+  const opt=document.createElement('option');
+  opt.value=i;
+  opt.textContent=it.label;
+  pick.appendChild(opt);
+});
+pick.value=0;
+
+document.getElementById('play').onclick=()=>{
+  const it=items[Number(pick.value)];
+  player.src=toEmbedURL(it.url);
+  hint.textContent=`Playing: ${it.label}`;
+};
+document.getElementById('open').onclick=()=>{
+  const it=items[Number(pick.value)];
+  window.open(it.url,'_blank');
+};
+document.getElementById('stop').onclick=()=>{
+  player.src='';
+  hint.textContent='Stopped.';
+};
+
+// 🎵 BGM
+const bgm=document.getElementById('bgm');
+const bgmToggle=document.getElementById('bgmToggle');
+let playing=false;
+bgmToggle.addEventListener('click',()=>{
+  if(!playing){
+    bgm.volume=0.6;
+    bgm.play().then(()=>{
+      playing=true;
+      bgmToggle.textContent='🔇 BGM OFF';
+    }).catch(()=>console.log('Tap once to start BGM.'));
+  }else{
+    bgm.pause();
+    playing=false;
+    bgmToggle.textContent='🎵 BGM ON';
+  }
+});
+</script>
+</body>
+</html>
